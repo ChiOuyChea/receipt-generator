@@ -21,6 +21,7 @@ import { useReceiptStore } from '../../stores/receiptStore'
 import { useSettingsStore, PAPER_PRESETS } from '../../stores/settingsStore'
 import { useBusinessInfoStore } from '../../stores/businessInfoStore'
 import { formatCurrency } from '../../lib/utils'
+import appLogo from '@/assets/receipt-generator.png'
 
 const { t } = useI18n()
 
@@ -238,12 +239,14 @@ function handleCustomHeight(event) {
   <main class="min-h-svh bg-[#f7f7f7] px-4 py-6 text-black dark:bg-[#1c1a17] dark:text-[#f7f7f7] sm:px-6 lg:px-8">
     <div class="mx-auto flex max-w-7xl flex-col gap-6">
       <header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p class="text-sm font-semibold uppercase tracking-wide text-[#854836]">{{ t('app.eyebrow') }}</p>
-          <h1 class="mt-2 text-3xl font-semibold text-black dark:text-[#f7f7f7] sm:text-4xl">{{ t('app.title') }}</h1>
-          <p class="mt-3 max-w-2xl text-sm text-[#6b5a50] dark:text-[#b09080] sm:text-base">
-            {{ t('app.description') }}
-          </p>
+        <div class="flex items-start gap-4">
+          <img :src="appLogo" alt="Receipt PDF Creator" class="h-12 w-12 rounded-lg sm:h-14 sm:w-14" />
+          <div>
+            <h1 class="text-3xl font-semibold text-[#854836] sm:text-4xl text-shadow">{{ t('app.title') }}</h1>
+            <p class="mt-3 max-w-2xl text-sm text-[#6b5a50] dark:text-[#b09080] sm:text-base">
+              {{ t('app.description') }}
+            </p>
+          </div>
         </div>
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button variant="outline" size="icon" :aria-label="t('businessInfo.title')" @click="isBusinessInfoOpen = true">

@@ -10,9 +10,8 @@
     "elderly": "Elderly Friendly"
   },
   "app": {
-    "eyebrow": "Receipt PDF Creator",
-    "title": "Build and export a professional receipt",
-    "description": "Manage products, confirm delivery details, preview the receipt structure, and export a print-ready PDF.",
+    "title": "Receipt PDF Creator",
+    "description": "Build and export a professional receipt. Manage products, confirm delivery details, preview the receipt structure, and export a print-ready PDF.",
     "continue": "Continue",
     "preview": "Preview receipt",
     "previewTitle": "Receipt preview",
