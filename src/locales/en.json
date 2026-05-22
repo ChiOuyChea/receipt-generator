@@ -49,7 +49,8 @@
     "actions": "Actions",
     "remove": "Remove {name}",
     "fallbackName": "product",
-    "empty": "No products yet. Add a product to begin."
+    "empty": "No products yet. Add a product to begin.",
+    "dragHandle": "Drag to reorder"
   },
   "dialog": {
     "title": "Delivery information",
@@ -65,6 +66,10 @@
     "deliveryService": "Delivery Service",
     "deliveryServiceOther": "Other",
     "deliveryServiceOtherPlaceholder": "Enter delivery service name",
+    "discount": "Discount",
+    "notes": "Notes / Remarks",
+    "notesPlaceholder": "Add notes or special remarks for this receipt",
+    "copyImage": "Copy Image",
     "createPdf": "Create PDF"
   },
   "validation": {
@@ -75,7 +80,8 @@
     "phoneRequired": "Phone number is required.",
     "addressRequired": "Delivery address is required.",
     "deliveryFeeValid": "Delivery fee must be 0 or greater.",
-    "fixedTotalValid": "Fixed total must be 0 or greater."
+    "fixedTotalValid": "Fixed total must be 0 or greater.",
+    "discountValid": "Discount must be 0 or greater."
   },
   "toast": {
     "productAddedTitle": "Product added",
@@ -90,7 +96,13 @@
     "exportedTitle": "Receipt exported successfully",
     "exportedDescription": "The form was reset and a new receipt is ready.",
     "failedTitle": "PDF generation failed",
-    "failedDescription": "Try again with fewer or shorter receipt items."
+    "failedDescription": "Try again with fewer or shorter receipt items.",
+    "imageCopiedTitle": "Image copied",
+    "imageCopiedDescription": "The receipt image has been copied to your clipboard.",
+    "copyFailedTitle": "Copy failed",
+    "copyFailedDescription": "Your browser does not support copying images to the clipboard.",
+    "duplicatedTitle": "Receipt duplicated",
+    "duplicatedDescription": "The form has been pre-filled from the selected receipt."
   },
   "pdf": {
     "shopName": "ChiOuy",
@@ -119,5 +131,15 @@
     "contact": "For questions about this receipt, contact 017 685 141.",
     "notes": "Notes: Please keep this receipt for delivery confirmation and future reference.",
     "qr": "QR Code"
+  },
+  "history": {
+    "title": "Receipt History",
+    "description": "View and manage your previously created receipts.",
+    "empty": "No receipts yet. Create a receipt to see it here.",
+    "viewDetails": "View",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "close": "Close",
+    "createdAt": "Created"
   }
 }

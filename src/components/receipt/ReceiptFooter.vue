@@ -1,6 +1,13 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 
+defineProps({
+  notes: {
+    type: String,
+    default: '',
+  },
+})
+
 const { t } = useI18n()
 </script>
 
@@ -10,7 +17,7 @@ const { t } = useI18n()
       <div>
         <p class="pdf-footer-title">{{ t('pdf.thanks') }}</p>
         <p class="pdf-footer-copy">{{ t('pdf.contact') }}</p>
-        <p class="pdf-notes">{{ t('pdf.notes') }}</p>
+        <p class="pdf-notes">{{ notes || t('pdf.notes') }}</p>
       </div>
       <div class="pdf-qr">{{ t('pdf.qr') }}</div>
     </div>

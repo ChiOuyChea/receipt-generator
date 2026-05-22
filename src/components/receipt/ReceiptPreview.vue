@@ -113,7 +113,7 @@ const deliveryServiceName = computed(() => {
       </div>
       <div class="pdf-summary-row">
         <span>{{ t('pdf.discount') }}</span>
-        <span>{{ formatCurrency(0) }}</span>
+        <span>{{ formatCurrency(totals.discount) }}</span>
       </div>
       <div class="pdf-summary-total">
         <span>{{ t('pdf.finalTotal') }}</span>
@@ -121,7 +121,7 @@ const deliveryServiceName = computed(() => {
       </div>
     </section>
 
-    <ReceiptFooter />
+    <ReceiptFooter :notes="customerInfo.notes" />
   </article>
 </template>
 

@@ -19,14 +19,17 @@ export function useReceiptCalculator(products, customerInfo) {
     return customerInfo.value.fixedTotalPrice === '' || value < 0 ? null : value
   })
 
+  const discount = computed(() => Math.max(0, toNumber(customerInfo.value.discount)))
+
   const finalTotal = computed(() =>
-    fixedTotal.value === null ? subtotal.value + deliveryFee.value : fixedTotal.value,
+    fixedTotal.value === null ? subtotal.value + deliveryFee.value - discount.value : fixedTotal.value,
   )
 
   return {
     subtotal,
     totalQuantity,
     deliveryFee,
+    discount,
     fixedTotal,
     finalTotal,
   }

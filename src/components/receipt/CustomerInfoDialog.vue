@@ -1,9 +1,10 @@
 <script setup>
 import { computed, useTemplateRef, watch } from 'vue'
-import { Eye, Loader2, X } from 'lucide-vue-next'
+import { Copy, Eye, Loader2, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 import Input from '../ui/Input.vue'
+import KbdBadge from '../ui/KbdBadge.vue'
 import Separator from '../ui/Separator.vue'
 import vireakbuthamIcon from '@/assets/vireakbutham.png'
 import jalatIcon from '@/assets/jalat.png'
@@ -28,13 +29,17 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isCopying: {
+    type: Boolean,
+    default: false,
+  },
   finalTotal: {
     type: String,
     required: true,
   },
 })
 
-const emit = defineEmits(['create-pdf', 'preview'])
+const emit = defineEmits(['create-pdf', 'preview', 'copy-image'])
 const firstField = useTemplateRef('firstField')
 const { t } = useI18n()
 
@@ -71,15 +76,18 @@ const deliveryServices = computed(() => [
 <template>
   <Teleport to="body">
     <div :class="dialogClasses" role="dialog" aria-modal="true" aria-labelledby="customer-dialog-title">
-      <form class="flex max-h-[90svh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#252320]" @submit.prevent="emit('create-pdf')">
+      <form class="flex max-h-[90svh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#252320]" @submit.prevent="emit('create-pdf')">
         <div class="flex items-start justify-between gap-4 p-6">
           <div>
             <h2 id="customer-dialog-title" class="text-lg font-semibold text-black dark:text-[#f7f7f7]">{{ t('dialog.title') }}</h2>
             <p class="mt-1 text-sm text-[#6b5a50] dark:text-[#b09080]">{{ t('dialog.description') }}</p>
           </div>
-          <Button variant="ghost" size="icon" :aria-label="t('dialog.close')" @click="open = false">
-            <X class="h-4 w-4" aria-hidden="true" />
-          </Button>
+          <div class="flex items-center gap-2">
+            <KbdBadge keys="Esc" />
+            <Button variant="ghost" size="icon" :aria-label="t('dialog.close')" @click="open = false">
+              <X class="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
 
         <Separator />
@@ -152,7 +160,7 @@ const deliveryServices = computed(() => [
             />
           </div>
 
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid gap-4 sm:grid-cols-3">
             <div>
               <label class="mb-1 block text-sm font-medium text-[#854836]" for="delivery-fee">{{ t('dialog.deliveryFee') }}</label>
               <Input
@@ -164,6 +172,19 @@ const deliveryServices = computed(() => [
                 @input="sanitizeNumber('deliveryFee', $event)"
               />
               <p v-if="errors.deliveryFee" class="mt-1 text-xs text-rose-600">{{ errors.deliveryFee }}</p>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium text-[#854836]" for="discount">{{ t('dialog.discount') }}</label>
+              <Input
+                id="discount"
+                inputmode="decimal"
+                :model-value="customerInfo.discount"
+                :invalid="Boolean(errors.discount)"
+                placeholder="0.00"
+                @input="sanitizeNumber('discount', $event)"
+              />
+              <p v-if="errors.discount" class="mt-1 text-xs text-rose-600">{{ errors.discount }}</p>
             </div>
 
             <div>
@@ -179,6 +200,20 @@ const deliveryServices = computed(() => [
               <p v-if="errors.fixedTotalPrice" class="mt-1 text-xs text-rose-600">{{ errors.fixedTotalPrice }}</p>
             </div>
           </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium text-[#854836]" for="notes">{{ t('dialog.notes') }}</label>
+            <textarea
+              id="notes"
+              :value="customerInfo.notes"
+              :class="[
+                'min-h-20 w-full rounded-md border bg-white px-3 py-2 text-sm text-black outline-none transition placeholder:text-[#a0856e] focus:border-[#FFB22C] focus:ring-2 focus:ring-[#fff1d8] dark:bg-[#1e1b18] dark:text-[#f7f7f7] dark:placeholder:text-[#7a6050] dark:focus:ring-[#2a1f15]',
+                'border-[#eadfce] dark:border-[#3d2e28]',
+              ]"
+              :placeholder="t('dialog.notesPlaceholder')"
+              @input="updateField('notes', $event.target.value)"
+            />
+          </div>
         </div>
 
         <Separator />
@@ -192,6 +227,11 @@ const deliveryServices = computed(() => [
             <Button type="button" variant="outline" @click="emit('preview')">
               <Eye class="h-4 w-4" aria-hidden="true" />
               {{ t('app.preview') }}
+            </Button>
+            <Button type="button" variant="outline" :disabled="isCopying" @click="emit('copy-image')">
+              <Loader2 v-if="isCopying" class="h-4 w-4 animate-spin" aria-hidden="true" />
+              <Copy v-else class="h-4 w-4" aria-hidden="true" />
+              {{ t('dialog.copyImage') }}
             </Button>
             <Button type="submit" :disabled="isGenerating">
               <Loader2 v-if="isGenerating" class="h-4 w-4 animate-spin" aria-hidden="true" />

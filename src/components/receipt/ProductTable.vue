@@ -2,6 +2,7 @@
 import { Plus, RotateCcw } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
+import KbdBadge from '../ui/KbdBadge.vue'
 import ProductRow from './ProductRow.vue'
 
 defineProps({
@@ -13,9 +14,13 @@ defineProps({
     type: Object,
     default: () => ({}),
   },
+  productSuggestions: {
+    type: Array,
+    default: () => [],
+  },
 })
 
-const emit = defineEmits(['add-product', 'update-product', 'remove-product'])
+const emit = defineEmits(['add-product', 'update-product', 'remove-product', 'reorder-product'])
 const { t } = useI18n()
 </script>
 
@@ -34,11 +39,13 @@ const { t } = useI18n()
         <Button variant="outline" @click="emit('add-product')">
           <Plus class="h-4 w-4" aria-hidden="true" />
           {{ t('products.add') }}
+          <KbdBadge keys="Ctrl+Shift+Enter" />
         </Button>
       </div>
     </div>
 
-    <div class="sticky top-0 z-10 hidden grid-cols-[1.5fr_0.7fr_0.8fr_0.8fr_auto] gap-3 border-b border-[#eadfce] bg-white/95 pb-3 pt-2 text-xs font-bold uppercase tracking-wide text-[#854836] backdrop-blur dark:border-[#3d2e28] dark:bg-[#252320]/95 md:grid">
+    <div class="sticky top-0 z-10 hidden grid-cols-[auto_1.5fr_0.7fr_0.8fr_0.8fr_auto] gap-3 border-b border-[#eadfce] bg-white/95 pb-3 pt-2 text-xs font-bold uppercase tracking-wide text-[#854836] backdrop-blur dark:border-[#3d2e28] dark:bg-[#252320]/95 md:grid">
+      <span></span>
       <span>{{ t('products.name') }}</span>
       <span>{{ t('products.quantity') }}</span>
       <span>{{ t('products.unitPrice') }}</span>
@@ -57,9 +64,11 @@ const { t } = useI18n()
         :product="product"
         :errors="errors[product.id]"
         :can-remove="products.length > 1"
+        :product-suggestions="productSuggestions"
         @update-product="emit('update-product', $event)"
         @remove="emit('remove-product', $event)"
         @focus-next="emit('add-product')"
+        @reorder="emit('reorder-product', $event)"
       />
     </TransitionGroup>
   </div>

@@ -547,6 +547,7 @@ function preparePdfClone(documentClone, captureId, template = 'standard') {
 
 export function usePdfGenerator() {
   const isGenerating = shallowRef(false)
+  const isCopying = shallowRef(false)
 
   async function generatePdf(element, receiptNumber, template = 'standard') {
     if (!element) {
@@ -592,8 +593,36 @@ export function usePdfGenerator() {
     }
   }
 
+  async function copyAsImage(element, template = 'standard') {
+    if (!element) {
+      throw new Error('Receipt preview is not available.')
+    }
+
+    isCopying.value = true
+    const captureId = crypto.randomUUID()
+    element.setAttribute('data-pdf-capture-root', captureId)
+
+    try {
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        onclone: (documentClone) => preparePdfClone(documentClone, captureId, template),
+      })
+
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+    } finally {
+      element.removeAttribute('data-pdf-capture-root')
+      isCopying.value = false
+    }
+  }
+
   return {
     isGenerating,
+    isCopying,
     generatePdf,
+    copyAsImage,
   }
 }

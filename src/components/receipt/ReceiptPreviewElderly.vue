@@ -129,7 +129,7 @@ const deliveryServiceName = computed(() => {
       </div>
       <div class="pde-summary-row">
         <span class="pde-label">{{ t('pdf.discount') }}:</span>
-        <span>{{ formatCurrency(0) }}</span>
+        <span>{{ formatCurrency(totals.discount) }}</span>
       </div>
       <div class="pde-total-row">
         <span>{{ t('pdf.finalTotal') }}</span>
@@ -141,7 +141,7 @@ const deliveryServiceName = computed(() => {
     <footer class="pde-footer">
       <p class="pde-thanks">{{ t('pdf.thanks') }}</p>
       <p class="pde-contact">{{ t('pdf.contact') }}</p>
-      <p class="pde-notes">{{ t('pdf.notes') }}</p>
+      <p class="pde-notes">{{ customerInfo.notes || t('pdf.notes') }}</p>
     </footer>
   </article>
 </template>

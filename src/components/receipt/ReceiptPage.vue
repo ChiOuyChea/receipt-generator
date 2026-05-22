@@ -1,18 +1,21 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, useTemplateRef, watch } from 'vue'
-import { Eye, FileDown, Loader2, Moon, PackageCheck, ReceiptText, Sun, Truck, X } from 'lucide-vue-next'
+import { Copy, Eye, FileDown, History, Loader2, Moon, PackageCheck, ReceiptText, Sun, Truck, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 import Card from '../ui/Card.vue'
 import Separator from '../ui/Separator.vue'
 import Toast from '../ui/Toast.vue'
+import KbdBadge from '../ui/KbdBadge.vue'
 import AppLanguageSwitcher from './AppLanguageSwitcher.vue'
 import ProductTable from './ProductTable.vue'
 import CustomerInfoDialog from './CustomerInfoDialog.vue'
 import ReceiptPreview from './ReceiptPreview.vue'
 import ReceiptPreviewElderly from './ReceiptPreviewElderly.vue'
+import ReceiptHistoryPanel from './ReceiptHistoryPanel.vue'
 import { useReceiptCalculator } from '../../composables/useReceiptCalculator'
 import { usePdfGenerator } from '../../composables/usePdfGenerator'
+import { useReceiptHistory } from '../../composables/useReceiptHistory'
 import { useDarkMode } from '../../composables/useDarkMode'
 import { formatCurrency, formatDate, formatDateElderly, toNumber } from '../../lib/utils'
 
@@ -50,9 +53,11 @@ const customerInfo = ref({
   phoneNumber: draft?.customerInfo?.phoneNumber ?? '',
   deliveryAddress: draft?.customerInfo?.deliveryAddress ?? '',
   deliveryFee: draft?.customerInfo?.deliveryFee ?? '0',
+  discount: draft?.customerInfo?.discount ?? '0',
   fixedTotalPrice: draft?.customerInfo?.fixedTotalPrice ?? '',
   deliveryService: draft?.customerInfo?.deliveryService ?? 'vireakbutham',
   deliveryServiceCustom: draft?.customerInfo?.deliveryServiceCustom ?? '',
+  notes: draft?.customerInfo?.notes ?? '',
 })
 const receiptNumber = shallowRef(draft?.receiptNumber ?? createReceiptNumber())
 const receiptDate = shallowRef(formatDate(new Date()))
@@ -65,17 +70,21 @@ const customerErrors = reactive({})
 const toast = shallowRef(null)
 const receiptElement = useTemplateRef('receiptElement')
 
-const { subtotal, totalQuantity, deliveryFee, fixedTotal, finalTotal } = useReceiptCalculator(
+const { subtotal, totalQuantity, deliveryFee, discount, fixedTotal, finalTotal } = useReceiptCalculator(
   products,
   customerInfo,
 )
-const { isGenerating, generatePdf } = usePdfGenerator()
+const { isGenerating, isCopying, generatePdf, copyAsImage } = usePdfGenerator()
 const { isDark, toggle: toggleDark } = useDarkMode()
+const { history, addEntry, deleteEntry, getUniqueProductNames } = useReceiptHistory()
+const isHistoryOpen = shallowRef(false)
+const productSuggestions = computed(() => getUniqueProductNames())
 
 const totals = computed(() => ({
   subtotal: subtotal.value,
   totalQuantity: totalQuantity.value,
   deliveryFee: deliveryFee.value,
+  discount: discount.value,
   fixedTotal: fixedTotal.value,
   finalTotal: finalTotal.value,
 }))
@@ -193,6 +202,10 @@ function validateCustomerInfo() {
     customerErrors.deliveryFee = t('validation.deliveryFeeValid')
   }
 
+  if (customerInfo.value.discount !== '' && toNumber(customerInfo.value.discount) < 0) {
+    customerErrors.discount = t('validation.discountValid')
+  }
+
   if (customerInfo.value.fixedTotalPrice !== '' && toNumber(customerInfo.value.fixedTotalPrice) < 0) {
     customerErrors.fixedTotalPrice = t('validation.fixedTotalValid')
   }
@@ -203,6 +216,81 @@ function validateCustomerInfo() {
 function resetProducts() {
   products.value = [createProduct()]
   clearErrors(productErrors)
+  customerInfo.value = {
+    customerName: '',
+    phoneNumber: '',
+    deliveryAddress: '',
+    deliveryFee: '0',
+    discount: '0',
+    fixedTotalPrice: '',
+    deliveryService: 'vireakbutham',
+    deliveryServiceCustom: '',
+    notes: '',
+  }
+  clearErrors(customerErrors)
+}
+
+function reorderProducts({ fromId, toId }) {
+  const arr = [...products.value]
+  const fromIdx = arr.findIndex(p => p.id === fromId)
+  const toIdx = arr.findIndex(p => p.id === toId)
+  if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return
+  const [moved] = arr.splice(fromIdx, 1)
+  arr.splice(toIdx, 0, moved)
+  products.value = arr
+}
+
+async function copyReceiptImage() {
+  const productsValid = validateProducts()
+  const customerValid = validateCustomerInfo()
+
+  if (!productsValid || !customerValid) {
+    showToast({
+      title: t('toast.incompleteTitle'),
+      description: t('toast.incompleteDescription'),
+      type: 'error',
+    })
+    return
+  }
+
+  try {
+    await nextTick()
+    await copyAsImage(receiptElement.value, selectedTemplate.value)
+    showToast({
+      title: t('toast.imageCopiedTitle'),
+      description: t('toast.imageCopiedDescription'),
+      type: 'success',
+    })
+  } catch {
+    showToast({
+      title: t('toast.copyFailedTitle'),
+      description: t('toast.copyFailedDescription'),
+      type: 'error',
+    })
+  }
+}
+
+function duplicateReceipt(entry) {
+  products.value = entry.products.map(p => ({ ...p, id: crypto.randomUUID() }))
+  customerInfo.value = {
+    customerName: entry.customerInfo?.customerName ?? '',
+    phoneNumber: entry.customerInfo?.phoneNumber ?? '',
+    deliveryAddress: entry.customerInfo?.deliveryAddress ?? '',
+    deliveryFee: entry.customerInfo?.deliveryFee ?? '0',
+    discount: entry.customerInfo?.discount ?? '0',
+    fixedTotalPrice: entry.customerInfo?.fixedTotalPrice ?? '',
+    deliveryService: entry.customerInfo?.deliveryService ?? 'vireakbutham',
+    deliveryServiceCustom: entry.customerInfo?.deliveryServiceCustom ?? '',
+    notes: entry.customerInfo?.notes ?? '',
+  }
+  selectedTemplate.value = entry.templateType || 'standard'
+  receiptNumber.value = createReceiptNumber()
+  isHistoryOpen.value = false
+  showToast({
+    title: t('toast.duplicatedTitle'),
+    description: t('toast.duplicatedDescription'),
+    type: 'success',
+  })
 }
 
 function handleGlobalKeydown(e) {
@@ -256,6 +344,21 @@ async function createPdf() {
   try {
     await nextTick()
     await generatePdf(receiptElement.value, receiptNumber.value, selectedTemplate.value)
+    addEntry({
+      receiptNumber: receiptNumber.value,
+      receiptDate: receiptDate.value,
+      products: products.value,
+      customerInfo: customerInfo.value,
+      totals: {
+        subtotal: subtotal.value,
+        totalQuantity: totalQuantity.value,
+        deliveryFee: deliveryFee.value,
+        discount: discount.value,
+        fixedTotal: fixedTotal.value,
+        finalTotal: finalTotal.value,
+      },
+      templateType: selectedTemplate.value,
+    })
     isDialogOpen.value = false
     receiptNumber.value = createReceiptNumber()
     products.value = [createProduct()]
@@ -314,10 +417,12 @@ async function createPdf() {
           <ProductTable
             :products="products"
             :errors="productErrors"
+            :product-suggestions="productSuggestions"
             @add-product="addProduct"
             @update-product="updateProduct"
             @remove-product="removeProduct"
             @reset-product="resetProducts"
+            @reorder-product="reorderProducts"
           />
         </Card>
 
@@ -368,7 +473,7 @@ async function createPdf() {
             </div>
             <div class="flex justify-between gap-4 text-[#6b5a50] dark:text-[#b09080]">
               <span>{{ t('summary.discount') }}</span>
-              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(0) }}</span>
+              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(discount) }}</span>
             </div>
             <Separator />
             <div class="flex items-center justify-between gap-4 text-lg font-bold text-black dark:text-[#f7f7f7]">
@@ -399,6 +504,15 @@ async function createPdf() {
             <Button variant="outline" class="w-full" @click="openReceiptPreview">
               <Eye class="h-4 w-4" aria-hidden="true" />
               {{ t('app.preview') }}
+            </Button>
+            <Button variant="outline" class="w-full" :disabled="isCopying" @click="copyReceiptImage">
+              <Loader2 v-if="isCopying" class="h-4 w-4 animate-spin" aria-hidden="true" />
+              <Copy v-else class="h-4 w-4" aria-hidden="true" />
+              {{ t('dialog.copyImage') }}
+            </Button>
+            <Button variant="outline" class="w-full" @click="isHistoryOpen = true">
+              <History class="h-4 w-4" aria-hidden="true" />
+              {{ t('history.title') }}
             </Button>
             <Button class="w-full" :disabled="isGenerating" @click="continueToCustomerInfo">
               {{ t('app.continue') }}
@@ -434,9 +548,18 @@ async function createPdf() {
       v-model:customer-info="customerInfo"
       :errors="customerErrors"
       :is-generating="isGenerating"
+      :is-copying="isCopying"
       :final-total="formatCurrency(finalTotal)"
       @create-pdf="createPdf"
       @preview="openReceiptPreview"
+      @copy-image="copyReceiptImage"
+    />
+
+    <ReceiptHistoryPanel
+      v-model:open="isHistoryOpen"
+      :history="history"
+      @duplicate="duplicateReceipt"
+      @delete="deleteEntry"
     />
 
     <Teleport to="body">
@@ -453,9 +576,12 @@ async function createPdf() {
               <h2 id="receipt-preview-title" class="text-lg font-semibold text-black dark:text-[#f7f7f7]">{{ t('app.previewTitle') }}</h2>
               <p class="mt-1 text-sm text-[#6b5a50] dark:text-[#b09080]">{{ t('app.previewDescription') }}</p>
             </div>
-            <Button variant="ghost" size="icon" :aria-label="t('app.closePreview')" @click="isPreviewOpen = false">
-              <X class="h-4 w-4" aria-hidden="true" />
-            </Button>
+            <div class="flex items-center gap-2">
+              <KbdBadge keys="Esc" />
+              <Button variant="ghost" size="icon" :aria-label="t('app.closePreview')" @click="isPreviewOpen = false">
+                <X class="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
           </div>
           <div class="overflow-auto bg-[#f7f7f7] p-4 dark:bg-[#1c1a17]">
             <div class="mx-auto w-fit origin-top scale-[0.72] sm:scale-90 lg:scale-100">
