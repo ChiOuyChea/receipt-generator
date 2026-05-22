@@ -1,129 +1,70 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, useTemplateRef, watch } from 'vue'
-import { Copy, Eye, FileDown, History, Loader2, Moon, PackageCheck, ReceiptText, Sun, Truck, X } from 'lucide-vue-next'
+import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef } from 'vue'
+import { Copy, Eye, FileDown, History, Loader2, Moon, PackageCheck, ReceiptText, Settings, Sun, Truck, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 import Card from '../ui/Card.vue'
+import Input from '../ui/Input.vue'
 import Separator from '../ui/Separator.vue'
 import Toast from '../ui/Toast.vue'
 import KbdBadge from '../ui/KbdBadge.vue'
 import AppLanguageSwitcher from './AppLanguageSwitcher.vue'
 import ProductTable from './ProductTable.vue'
 import CustomerInfoDialog from './CustomerInfoDialog.vue'
+import BusinessInfoDialog from './BusinessInfoDialog.vue'
 import ReceiptPreview from './ReceiptPreview.vue'
 import ReceiptPreviewElderly from './ReceiptPreviewElderly.vue'
 import ReceiptHistoryPanel from './ReceiptHistoryPanel.vue'
-import { useReceiptCalculator } from '../../composables/useReceiptCalculator'
 import { usePdfGenerator } from '../../composables/usePdfGenerator'
 import { useReceiptHistory } from '../../composables/useReceiptHistory'
-import { useDarkMode } from '../../composables/useDarkMode'
-import { formatCurrency, formatDate, formatDateElderly, toNumber } from '../../lib/utils'
+import { useReceiptStore } from '../../stores/receiptStore'
+import { useSettingsStore, PAPER_PRESETS } from '../../stores/settingsStore'
+import { useBusinessInfoStore } from '../../stores/businessInfoStore'
+import { formatCurrency } from '../../lib/utils'
 
-const STORAGE_KEY = 'receipt-pdf-creation-draft'
 const { t } = useI18n()
 
-function createProduct(overrides = {}) {
-  return {
-    id: crypto.randomUUID(),
-    name: '',
-    quantity: '1',
-    unitPrice: '',
-    ...overrides,
-  }
-}
+const receipt = useReceiptStore()
+const settings = useSettingsStore()
+const businessInfo = useBusinessInfoStore()
 
-function createReceiptNumber() {
-  const datePart = new Date().toISOString().slice(0, 10).replaceAll('-', '')
-  return `ChiOuy-${datePart}`
-}
+receipt._initPersistence()
+settings._initPersistence()
+businessInfo._initPersistence()
 
-function loadDraft() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
-}
-
-const draft = loadDraft()
-const products = ref(draft?.products?.length ? draft.products : [createProduct()])
-const customerInfo = ref({
-  customerName: draft?.customerInfo?.customerName ?? '',
-  phoneNumber: draft?.customerInfo?.phoneNumber ?? '',
-  deliveryAddress: draft?.customerInfo?.deliveryAddress ?? '',
-  deliveryFee: draft?.customerInfo?.deliveryFee ?? '0',
-  discount: draft?.customerInfo?.discount ?? '0',
-  fixedTotalPrice: draft?.customerInfo?.fixedTotalPrice ?? '',
-  deliveryService: draft?.customerInfo?.deliveryService ?? 'vireakbutham',
-  deliveryServiceCustom: draft?.customerInfo?.deliveryServiceCustom ?? '',
-  notes: draft?.customerInfo?.notes ?? '',
-})
-const receiptNumber = shallowRef(draft?.receiptNumber ?? createReceiptNumber())
-const receiptDate = shallowRef(formatDate(new Date()))
-const receiptDateElderly = shallowRef(formatDateElderly(new Date()))
-const selectedTemplate = shallowRef('standard')
 const isDialogOpen = shallowRef(false)
 const isPreviewOpen = shallowRef(false)
-const productErrors = reactive({})
-const customerErrors = reactive({})
+const isBusinessInfoOpen = shallowRef(false)
 const toast = shallowRef(null)
 const receiptElement = useTemplateRef('receiptElement')
 
-const { subtotal, totalQuantity, deliveryFee, discount, fixedTotal, finalTotal } = useReceiptCalculator(
-  products,
-  customerInfo,
-)
 const { isGenerating, isCopying, generatePdf, copyAsImage } = usePdfGenerator()
-const { isDark, toggle: toggleDark } = useDarkMode()
 const { history, addEntry, deleteEntry, getUniqueProductNames } = useReceiptHistory()
 const isHistoryOpen = shallowRef(false)
 const productSuggestions = computed(() => getUniqueProductNames())
 
-const totals = computed(() => ({
-  subtotal: subtotal.value,
-  totalQuantity: totalQuantity.value,
-  deliveryFee: deliveryFee.value,
-  discount: discount.value,
-  fixedTotal: fixedTotal.value,
-  finalTotal: finalTotal.value,
-}))
+const paperSizeOptions = ['a4', 'a5', 'a6', 'custom']
 
 const summaryCards = computed(() => [
   {
     label: t('summary.products'),
-    value: products.value.length,
-    detail: t('summary.units', { count: totalQuantity.value }),
+    value: receipt.products.length,
+    detail: t('summary.units', { count: receipt.totalQuantity }),
     icon: PackageCheck,
   },
   {
     label: t('summary.subtotal'),
-    value: formatCurrency(subtotal.value),
+    value: formatCurrency(receipt.subtotal),
     detail: t('summary.beforeDelivery'),
     icon: ReceiptText,
   },
   {
     label: t('summary.finalTotal'),
-    value: formatCurrency(finalTotal.value),
-    detail: fixedTotal.value === null ? t('summary.calculatedTotal') : t('summary.fixedOverride'),
+    value: formatCurrency(receipt.finalTotal),
+    detail: receipt.fixedTotal === null ? t('summary.calculatedTotal') : t('summary.fixedOverride'),
     icon: Truck,
   },
 ])
-
-watch(
-  [products, customerInfo, receiptNumber],
-  () => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        products: products.value,
-        customerInfo: customerInfo.value,
-        receiptNumber: receiptNumber.value,
-      }),
-    )
-  },
-  { deep: true },
-)
 
 function showToast(nextToast) {
   toast.value = nextToast
@@ -133,116 +74,39 @@ function showToast(nextToast) {
 }
 
 function addProduct() {
-  products.value = [...products.value, createProduct()]
+  receipt.addProduct()
   showToast({ title: t('toast.productAddedTitle'), description: t('toast.productAddedDescription'), type: 'success' })
 }
 
 function updateProduct(updatedProduct) {
-  products.value = products.value.map((product) =>
-    product.id === updatedProduct.id ? updatedProduct : product,
-  )
+  receipt.updateProduct(updatedProduct)
 }
 
 function removeProduct(productId) {
-  if (products.value.length === 1) return
-  products.value = products.value.filter((product) => product.id !== productId)
-  delete productErrors[productId]
+  if (receipt.products.length === 1) return
+  receipt.removeProduct(productId)
   showToast({ title: t('toast.productRemovedTitle'), description: t('toast.productRemovedDescription'), type: 'success' })
 }
 
-function clearErrors(target) {
-  Object.keys(target).forEach((key) => {
-    delete target[key]
-  })
-}
-
-function validateProducts() {
-  clearErrors(productErrors)
-
-  if (!products.value.length) {
-    showToast({ title: t('toast.addProductFirstTitle'), description: t('validation.productListRequired'), type: 'error' })
-    return false
-  }
-
-  products.value.forEach((product) => {
-    const errors = {}
-
-    if (!product.name.trim()) {
-      errors.name = t('validation.productRequired')
-    }
-
-    if (toNumber(product.quantity) <= 0) {
-      errors.quantity = t('validation.quantityPositive')
-    }
-
-    if (product.unitPrice === '' || toNumber(product.unitPrice) < 0) {
-      errors.unitPrice = t('validation.priceValid')
-    }
-
-    if (Object.keys(errors).length) {
-      productErrors[product.id] = errors
-    }
-  })
-
-  return Object.keys(productErrors).length === 0
-}
-
-function validateCustomerInfo() {
-  clearErrors(customerErrors)
-
-  if (!customerInfo.value.phoneNumber.trim()) {
-    customerErrors.phoneNumber = t('validation.phoneRequired')
-  }
-
-  if (!customerInfo.value.deliveryAddress.trim()) {
-    customerErrors.deliveryAddress = t('validation.addressRequired')
-  }
-
-  if (customerInfo.value.deliveryFee === '' || toNumber(customerInfo.value.deliveryFee) < 0) {
-    customerErrors.deliveryFee = t('validation.deliveryFeeValid')
-  }
-
-  if (customerInfo.value.discount !== '' && toNumber(customerInfo.value.discount) < 0) {
-    customerErrors.discount = t('validation.discountValid')
-  }
-
-  if (customerInfo.value.fixedTotalPrice !== '' && toNumber(customerInfo.value.fixedTotalPrice) < 0) {
-    customerErrors.fixedTotalPrice = t('validation.fixedTotalValid')
-  }
-
-  return Object.keys(customerErrors).length === 0
-}
-
 function resetProducts() {
-  products.value = [createProduct()]
-  clearErrors(productErrors)
-  customerInfo.value = {
-    customerName: '',
-    phoneNumber: '',
-    deliveryAddress: '',
-    deliveryFee: '0',
-    discount: '0',
-    fixedTotalPrice: '',
-    deliveryService: 'vireakbutham',
-    deliveryServiceCustom: '',
-    notes: '',
-  }
-  clearErrors(customerErrors)
+  receipt.resetDraft()
 }
 
-function reorderProducts({ fromId, toId }) {
-  const arr = [...products.value]
-  const fromIdx = arr.findIndex(p => p.id === fromId)
-  const toIdx = arr.findIndex(p => p.id === toId)
-  if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return
-  const [moved] = arr.splice(fromIdx, 1)
-  arr.splice(toIdx, 0, moved)
-  products.value = arr
+function reorderProducts(payload) {
+  receipt.reorderProducts(payload)
+}
+
+function getPaperConfig() {
+  return {
+    widthMm: settings.paperSize.widthMm,
+    heightMm: settings.paperSize.heightMm,
+    widthPx: settings.receiptWidthPx,
+  }
 }
 
 async function copyReceiptImage() {
-  const productsValid = validateProducts()
-  const customerValid = validateCustomerInfo()
+  const productsValid = receipt.validateProducts(t)
+  const customerValid = receipt.validateCustomerInfo(t)
 
   if (!productsValid || !customerValid) {
     showToast({
@@ -255,7 +119,7 @@ async function copyReceiptImage() {
 
   try {
     await nextTick()
-    await copyAsImage(receiptElement.value, selectedTemplate.value)
+    await copyAsImage(receiptElement.value, settings.selectedTemplate, getPaperConfig())
     showToast({
       title: t('toast.imageCopiedTitle'),
       description: t('toast.imageCopiedDescription'),
@@ -271,20 +135,8 @@ async function copyReceiptImage() {
 }
 
 function duplicateReceipt(entry) {
-  products.value = entry.products.map(p => ({ ...p, id: crypto.randomUUID() }))
-  customerInfo.value = {
-    customerName: entry.customerInfo?.customerName ?? '',
-    phoneNumber: entry.customerInfo?.phoneNumber ?? '',
-    deliveryAddress: entry.customerInfo?.deliveryAddress ?? '',
-    deliveryFee: entry.customerInfo?.deliveryFee ?? '0',
-    discount: entry.customerInfo?.discount ?? '0',
-    fixedTotalPrice: entry.customerInfo?.fixedTotalPrice ?? '',
-    deliveryService: entry.customerInfo?.deliveryService ?? 'vireakbutham',
-    deliveryServiceCustom: entry.customerInfo?.deliveryServiceCustom ?? '',
-    notes: entry.customerInfo?.notes ?? '',
-  }
-  selectedTemplate.value = entry.templateType || 'standard'
-  receiptNumber.value = createReceiptNumber()
+  receipt.duplicateFrom(entry)
+  settings.selectedTemplate = entry.templateType || 'standard'
   isHistoryOpen.value = false
   showToast({
     title: t('toast.duplicatedTitle'),
@@ -304,6 +156,8 @@ function handleGlobalKeydown(e) {
       isPreviewOpen.value = false
     } else if (isDialogOpen.value) {
       isDialogOpen.value = false
+    } else if (isBusinessInfoOpen.value) {
+      isBusinessInfoOpen.value = false
     }
   }
 }
@@ -312,7 +166,7 @@ onMounted(() => window.addEventListener('keydown', handleGlobalKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', handleGlobalKeydown))
 
 function continueToCustomerInfo() {
-  if (!validateProducts()) {
+  if (!receipt.validateProducts(t)) {
     showToast({
       title: t('toast.checkProductsTitle'),
       description: t('toast.checkProductsDescription'),
@@ -329,8 +183,8 @@ function openReceiptPreview() {
 }
 
 async function createPdf() {
-  const productsValid = validateProducts()
-  const customerValid = validateCustomerInfo()
+  const productsValid = receipt.validateProducts(t)
+  const customerValid = receipt.validateCustomerInfo(t)
 
   if (!productsValid || !customerValid) {
     showToast({
@@ -343,25 +197,18 @@ async function createPdf() {
 
   try {
     await nextTick()
-    await generatePdf(receiptElement.value, receiptNumber.value, selectedTemplate.value)
+    await generatePdf(receiptElement.value, receipt.receiptNumber, settings.selectedTemplate, getPaperConfig())
     addEntry({
-      receiptNumber: receiptNumber.value,
-      receiptDate: receiptDate.value,
-      products: products.value,
-      customerInfo: customerInfo.value,
-      totals: {
-        subtotal: subtotal.value,
-        totalQuantity: totalQuantity.value,
-        deliveryFee: deliveryFee.value,
-        discount: discount.value,
-        fixedTotal: fixedTotal.value,
-        finalTotal: finalTotal.value,
-      },
-      templateType: selectedTemplate.value,
+      receiptNumber: receipt.receiptNumber,
+      receiptDate: receipt.receiptDate,
+      products: receipt.products,
+      customerInfo: receipt.customerInfo,
+      totals: receipt.totals,
+      templateType: settings.selectedTemplate,
     })
     isDialogOpen.value = false
-    receiptNumber.value = createReceiptNumber()
-    products.value = [createProduct()]
+    receipt.refreshReceiptNumber()
+    receipt.products = [{ id: crypto.randomUUID(), name: '', quantity: '1', unitPrice: '' }]
     showToast({
       title: t('toast.exportedTitle'),
       description: t('toast.exportedDescription'),
@@ -374,6 +221,16 @@ async function createPdf() {
       type: 'error',
     })
   }
+}
+
+function handleCustomWidth(event) {
+  const val = Number(event.target.value)
+  if (val > 0) settings.setCustomSize(val, settings.paperSize.heightMm)
+}
+
+function handleCustomHeight(event) {
+  const val = Number(event.target.value)
+  if (val > 0) settings.setCustomSize(settings.paperSize.widthMm, val)
 }
 </script>
 
@@ -389,8 +246,11 @@ async function createPdf() {
           </p>
         </div>
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button variant="outline" size="icon" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDark">
-            <Sun v-if="isDark" class="h-4 w-4" aria-hidden="true" />
+          <Button variant="outline" size="icon" :aria-label="t('businessInfo.title')" @click="isBusinessInfoOpen = true">
+            <Settings class="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button variant="outline" size="icon" :aria-label="settings.isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="settings.toggleDark()">
+            <Sun v-if="settings.isDark" class="h-4 w-4" aria-hidden="true" />
             <Moon v-else class="h-4 w-4" aria-hidden="true" />
           </Button>
           <AppLanguageSwitcher />
@@ -415,8 +275,8 @@ async function createPdf() {
       <div class="grid gap-6 xl:grid-cols-[1fr_420px]">
         <Card class="p-4 sm:p-6">
           <ProductTable
-            :products="products"
-            :errors="productErrors"
+            :products="receipt.products"
+            :errors="receipt.productErrors"
             :product-suggestions="productSuggestions"
             @add-product="addProduct"
             @update-product="updateProduct"
@@ -433,29 +293,69 @@ async function createPdf() {
             <div class="flex gap-1 rounded-lg border border-[#eadfce] bg-[#faf9f7] p-1 dark:border-[#3d2e28] dark:bg-[#1e1b18]">
               <button
                 class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-                :class="selectedTemplate === 'standard'
+                :class="settings.selectedTemplate === 'standard'
                   ? 'bg-[#ffb22c] text-black shadow-sm'
                   : 'text-[#6b5a50] hover:text-black dark:text-[#b09080] dark:hover:text-[#f7f7f7]'"
-                @click="selectedTemplate = 'standard'"
+                @click="settings.selectedTemplate = 'standard'"
               >
                 {{ t('template.standard') }}
               </button>
               <button
                 class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-                :class="selectedTemplate === 'elderly'
+                :class="settings.selectedTemplate === 'elderly'
                   ? 'bg-[#ffb22c] text-black shadow-sm'
                   : 'text-[#6b5a50] hover:text-black dark:text-[#b09080] dark:hover:text-[#f7f7f7]'"
-                @click="selectedTemplate = 'elderly'"
+                @click="settings.selectedTemplate = 'elderly'"
               >
                 {{ t('template.elderly') }}
               </button>
             </div>
           </div>
 
+          <!-- Paper size selector -->
+          <div class="mb-5">
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-[#854836]">{{ t('paperSize.label') }}</p>
+            <div class="flex gap-1 rounded-lg border border-[#eadfce] bg-[#faf9f7] p-1 dark:border-[#3d2e28] dark:bg-[#1e1b18]">
+              <button
+                v-for="size in paperSizeOptions"
+                :key="size"
+                class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                :class="settings.paperSize.preset === size
+                  ? 'bg-[#ffb22c] text-black shadow-sm'
+                  : 'text-[#6b5a50] hover:text-black dark:text-[#b09080] dark:hover:text-[#f7f7f7]'"
+                @click="size === 'custom' ? settings.setCustomSize(settings.paperSize.widthMm, settings.paperSize.heightMm) : settings.setPaperSize(size)"
+              >
+                {{ t(`paperSize.${size}`) }}
+              </button>
+            </div>
+            <div v-if="settings.paperSize.preset === 'custom'" class="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label class="mb-1 block text-xs font-medium text-[#6b5a50] dark:text-[#b09080]" for="paper-width">{{ t('paperSize.width') }}</label>
+                <Input
+                  id="paper-width"
+                  type="number"
+                  inputmode="numeric"
+                  :model-value="settings.paperSize.widthMm"
+                  @change="handleCustomWidth"
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-[#6b5a50] dark:text-[#b09080]" for="paper-height">{{ t('paperSize.height') }}</label>
+                <Input
+                  id="paper-height"
+                  type="number"
+                  inputmode="numeric"
+                  :model-value="settings.paperSize.heightMm"
+                  @change="handleCustomHeight"
+                />
+              </div>
+            </div>
+          </div>
+
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-lg font-semibold text-black dark:text-[#f7f7f7]">{{ t('summary.receiptSummary') }}</h2>
-              <p class="mt-1 text-sm text-[#6b5a50] dark:text-[#b09080]">{{ receiptNumber }}</p>
+              <p class="mt-1 text-sm text-[#6b5a50] dark:text-[#b09080]">{{ receipt.receiptNumber }}</p>
             </div>
             <span class="rounded-md bg-[#fff8ed] px-3 py-1 text-sm font-medium text-[#854836] dark:bg-[#2a1f15]">{{ t('app.draftSaved') }}</span>
           </div>
@@ -465,20 +365,20 @@ async function createPdf() {
           <div class="space-y-3 text-sm">
             <div class="flex justify-between gap-4 text-[#6b5a50] dark:text-[#b09080]">
               <span>{{ t('summary.subtotal') }}</span>
-              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(subtotal) }}</span>
+              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(receipt.subtotal) }}</span>
             </div>
             <div class="flex justify-between gap-4 text-[#6b5a50] dark:text-[#b09080]">
               <span>{{ t('summary.deliveryFee') }}</span>
-              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(deliveryFee) }}</span>
+              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(receipt.deliveryFee) }}</span>
             </div>
             <div class="flex justify-between gap-4 text-[#6b5a50] dark:text-[#b09080]">
               <span>{{ t('summary.discount') }}</span>
-              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(discount) }}</span>
+              <span class="font-medium text-black dark:text-[#f7f7f7]">{{ formatCurrency(receipt.discount) }}</span>
             </div>
             <Separator />
             <div class="flex items-center justify-between gap-4 text-lg font-bold text-black dark:text-[#f7f7f7]">
               <span>{{ t('summary.finalTotal') }}</span>
-              <span>{{ formatCurrency(finalTotal) }}</span>
+              <span>{{ formatCurrency(receipt.finalTotal) }}</span>
             </div>
           </div>
 
@@ -487,15 +387,15 @@ async function createPdf() {
             <dl class="mt-3 space-y-2 text-sm text-[#6b5a50] dark:text-[#b09080]">
               <div class="flex justify-between gap-4">
                 <dt>{{ t('summary.receiptDate') }}</dt>
-                <dd class="font-medium text-black dark:text-[#f7f7f7]">{{ receiptDate }}</dd>
+                <dd class="font-medium text-black dark:text-[#f7f7f7]">{{ receipt.receiptDate }}</dd>
               </div>
               <div class="flex justify-between gap-4">
                 <dt>{{ t('summary.products') }}</dt>
-                <dd class="font-medium text-black dark:text-[#f7f7f7]">{{ products.length }}</dd>
+                <dd class="font-medium text-black dark:text-[#f7f7f7]">{{ receipt.products.length }}</dd>
               </div>
               <div class="flex justify-between gap-4">
                 <dt>{{ t('summary.totalUnits') }}</dt>
-                <dd class="font-medium text-black dark:text-[#f7f7f7]">{{ totalQuantity }}</dd>
+                <dd class="font-medium text-black dark:text-[#f7f7f7]">{{ receipt.totalQuantity }}</dd>
               </div>
             </dl>
           </div>
@@ -525,35 +425,39 @@ async function createPdf() {
     <div class="pointer-events-none fixed left-[-10000px] top-0" aria-hidden="true">
       <div ref="receiptElement">
         <ReceiptPreview
-          v-if="selectedTemplate === 'standard'"
-          :products="products"
-          :customer-info="customerInfo"
-          :totals="totals"
-          :receipt-number="receiptNumber"
-          :receipt-date="receiptDate"
+          v-if="settings.selectedTemplate === 'standard'"
+          :products="receipt.products"
+          :customer-info="receipt.customerInfo"
+          :totals="receipt.totals"
+          :receipt-number="receipt.receiptNumber"
+          :receipt-date="receipt.receiptDate"
+          :receipt-width="settings.receiptWidthPx"
         />
         <ReceiptPreviewElderly
           v-else
-          :products="products"
-          :customer-info="customerInfo"
-          :totals="totals"
-          :receipt-number="receiptNumber"
-          :receipt-date="receiptDateElderly"
+          :products="receipt.products"
+          :customer-info="receipt.customerInfo"
+          :totals="receipt.totals"
+          :receipt-number="receipt.receiptNumber"
+          :receipt-date="receipt.receiptDateElderly"
+          :receipt-width="settings.receiptWidthPx"
         />
       </div>
     </div>
 
     <CustomerInfoDialog
       v-model:open="isDialogOpen"
-      v-model:customer-info="customerInfo"
-      :errors="customerErrors"
+      v-model:customer-info="receipt.customerInfo"
+      :errors="receipt.customerErrors"
       :is-generating="isGenerating"
       :is-copying="isCopying"
-      :final-total="formatCurrency(finalTotal)"
+      :final-total="formatCurrency(receipt.finalTotal)"
       @create-pdf="createPdf"
       @preview="openReceiptPreview"
       @copy-image="copyReceiptImage"
     />
+
+    <BusinessInfoDialog v-model:open="isBusinessInfoOpen" />
 
     <ReceiptHistoryPanel
       v-model:open="isHistoryOpen"
@@ -586,20 +490,22 @@ async function createPdf() {
           <div class="overflow-auto bg-[#f7f7f7] p-4 dark:bg-[#1c1a17]">
             <div class="mx-auto w-fit origin-top scale-[0.72] sm:scale-90 lg:scale-100">
               <ReceiptPreview
-                v-if="selectedTemplate === 'standard'"
-                :products="products"
-                :customer-info="customerInfo"
-                :totals="totals"
-                :receipt-number="receiptNumber"
-                :receipt-date="receiptDate"
+                v-if="settings.selectedTemplate === 'standard'"
+                :products="receipt.products"
+                :customer-info="receipt.customerInfo"
+                :totals="receipt.totals"
+                :receipt-number="receipt.receiptNumber"
+                :receipt-date="receipt.receiptDate"
+                :receipt-width="settings.receiptWidthPx"
               />
               <ReceiptPreviewElderly
                 v-else
-                :products="products"
-                :customer-info="customerInfo"
-                :totals="totals"
-                :receipt-number="receiptNumber"
-                :receipt-date="receiptDateElderly"
+                :products="receipt.products"
+                :customer-info="receipt.customerInfo"
+                :totals="receipt.totals"
+                :receipt-number="receipt.receiptNumber"
+                :receipt-date="receipt.receiptDateElderly"
+                :receipt-width="settings.receiptWidthPx"
               />
             </div>
           </div>

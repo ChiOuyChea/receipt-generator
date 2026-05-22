@@ -28,6 +28,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  receiptWidth: {
+    type: Number,
+    default: 794,
+  },
 })
 
 const deliveryServiceName = computed(() => {
@@ -44,7 +48,7 @@ const deliveryServiceName = computed(() => {
 </script>
 
 <template>
-  <article class="pdf-receipt">
+  <article class="pdf-receipt" :style="{ width: receiptWidth + 'px' }">
     <ReceiptHeader :receipt-number="receiptNumber" :receipt-date="receiptDate" />
 
     <h2 class="pdf-section-title">{{ t('pdf.customer') }}</h2>
@@ -127,7 +131,6 @@ const deliveryServiceName = computed(() => {
 
 <style scoped>
 .pdf-receipt {
-  width: 794px;
   padding: 48px;
   background: #ffffff;
   color: #0f172a;

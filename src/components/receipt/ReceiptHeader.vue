@@ -1,8 +1,10 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import logo from '@/assets/r1.jpg'
+import { useBusinessInfoStore } from '../../stores/businessInfoStore'
 
 const { t } = useI18n()
+const businessInfo = useBusinessInfoStore()
 
 defineProps({
   receiptNumber: {
@@ -14,16 +16,20 @@ defineProps({
     required: true,
   },
 })
+
+const shopName = computed(() => businessInfo.shopName || t('pdf.shopName'))
+const shopAddress = computed(() => businessInfo.shopAddress || t('pdf.shopAddress'))
+const shopPhone = computed(() => businessInfo.shopPhone || t('pdf.shopPhone'))
 </script>
 
 <template>
   <header class="pdf-header">
     <div class="pdf-brand">
-      <img class="pdf-logo" :src="logo" alt="ChiOuy Logo" />
+      <img class="pdf-logo" :src="businessInfo.effectiveLogoUrl" alt="Shop Logo" />
       <div>
-        <p class="pdf-shop-name">{{ t('pdf.shopName') }}</p>
-        <p class="pdf-muted pdf-address">{{ t('pdf.shopAddress') }}</p>
-        <p class="pdf-muted">{{ t('pdf.shopPhone') }}</p>
+        <p class="pdf-shop-name">{{ shopName }}</p>
+        <p class="pdf-muted pdf-address">{{ shopAddress }}</p>
+        <p class="pdf-muted">{{ shopPhone }}</p>
       </div>
     </div>
     <div class="pdf-meta">

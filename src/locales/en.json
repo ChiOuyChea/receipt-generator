@@ -132,6 +132,26 @@
     "notes": "Notes: Please keep this receipt for delivery confirmation and future reference.",
     "qr": "QR Code"
   },
+  "paperSize": {
+    "label": "Paper Size",
+    "a4": "A4",
+    "a5": "A5",
+    "a6": "A6",
+    "custom": "Custom",
+    "width": "Width (mm)",
+    "height": "Height (mm)"
+  },
+  "businessInfo": {
+    "title": "Business Information",
+    "description": "Customize your shop details shown on receipts.",
+    "shopName": "Shop Name",
+    "shopAddress": "Shop Address",
+    "shopPhone": "Shop Phone",
+    "logo": "Shop Logo",
+    "uploadLogo": "Upload Logo",
+    "resetDefaults": "Reset to defaults",
+    "save": "Save"
+  },
   "history": {
     "title": "Receipt History",
     "description": "View and manage your previously created receipts.",

@@ -1,10 +1,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import logo from '@/assets/r1.jpg'
 import { formatCurrency } from '../../lib/utils'
+import { useBusinessInfoStore } from '../../stores/businessInfoStore'
 
 const { t } = useI18n()
+const businessInfo = useBusinessInfoStore()
 
 const props = defineProps({
   products: {
@@ -27,6 +28,21 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  receiptWidth: {
+    type: Number,
+    default: 794,
+  },
+})
+
+const shopName = computed(() => businessInfo.shopName || t('pdf.shopName'))
+const shopAddress = computed(() => businessInfo.shopAddress || t('pdf.shopAddress'))
+const shopPhone = computed(() => businessInfo.shopPhone || t('pdf.shopPhone'))
+
+const contactText = computed(() => {
+  if (businessInfo.shopPhone) {
+    return t('pdf.contact').replace(t('pdf.shopPhone'), businessInfo.shopPhone)
+  }
+  return t('pdf.contact')
 })
 
 const deliveryServiceName = computed(() => {
@@ -43,15 +59,15 @@ const deliveryServiceName = computed(() => {
 </script>
 
 <template>
-  <article class="pde-receipt">
+  <article class="pde-receipt" :style="{ width: receiptWidth + 'px' }">
     <!-- Header -->
     <header class="pde-header">
       <div class="pde-brand">
-        <img class="pde-logo" :src="logo" alt="ChiOuy Logo" />
+        <img class="pde-logo" :src="businessInfo.effectiveLogoUrl" alt="Shop Logo" />
         <div>
-          <p class="pde-shop-name">{{ t('pdf.shopName') }}</p>
-          <p class="pde-muted">{{ t('pdf.shopAddress') }}</p>
-          <p class="pde-muted">{{ t('pdf.shopPhone') }}</p>
+          <p class="pde-shop-name">{{ shopName }}</p>
+          <p class="pde-muted">{{ shopAddress }}</p>
+          <p class="pde-muted">{{ shopPhone }}</p>
         </div>
       </div>
       <div class="pde-meta">
@@ -140,7 +156,7 @@ const deliveryServiceName = computed(() => {
     <!-- Footer -->
     <footer class="pde-footer">
       <p class="pde-thanks">{{ t('pdf.thanks') }}</p>
-      <p class="pde-contact">{{ t('pdf.contact') }}</p>
+      <p class="pde-contact">{{ contactText }}</p>
       <p class="pde-notes">{{ customerInfo.notes || t('pdf.notes') }}</p>
     </footer>
   </article>
@@ -148,7 +164,6 @@ const deliveryServiceName = computed(() => {
 
 <style scoped>
 .pde-receipt {
-  width: 794px;
   padding: 48px;
   background: #ffffff;
   color: #000000;

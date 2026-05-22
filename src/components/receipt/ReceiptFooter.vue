@@ -1,5 +1,7 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useBusinessInfoStore } from '../../stores/businessInfoStore'
 
 defineProps({
   notes: {
@@ -9,6 +11,14 @@ defineProps({
 })
 
 const { t } = useI18n()
+const businessInfo = useBusinessInfoStore()
+
+const contactText = computed(() => {
+  if (businessInfo.shopPhone) {
+    return t('pdf.contact').replace(t('pdf.shopPhone'), businessInfo.shopPhone)
+  }
+  return t('pdf.contact')
+})
 </script>
 
 <template>
@@ -16,7 +26,7 @@ const { t } = useI18n()
     <div class="pdf-footer-grid">
       <div>
         <p class="pdf-footer-title">{{ t('pdf.thanks') }}</p>
-        <p class="pdf-footer-copy">{{ t('pdf.contact') }}</p>
+        <p class="pdf-footer-copy">{{ contactText }}</p>
         <p class="pdf-notes">{{ notes || t('pdf.notes') }}</p>
       </div>
       <div class="pdf-qr">{{ t('pdf.qr') }}</div>

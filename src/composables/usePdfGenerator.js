@@ -2,7 +2,8 @@ import { shallowRef } from 'vue'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
-const PDF_CAPTURE_CSS = `
+function getPdfCaptureCss(widthPx) {
+  return `
   html, body {
     margin: 0 !important;
     padding: 0 !important;
@@ -13,12 +14,12 @@ const PDF_CAPTURE_CSS = `
 
   [data-pdf-capture-root] {
     display: block !important;
-    width: 794px !important;
+    width: ${widthPx}px !important;
     background: #ffffff !important;
   }
 
   .pdf-receipt {
-    width: 794px;
+    width: ${widthPx}px;
     padding: 48px;
     background: #ffffff;
     color: #0f172a;
@@ -301,8 +302,10 @@ const PDF_CAPTURE_CSS = `
     text-transform: uppercase;
   }
 `
+}
 
-const PDF_CAPTURE_CSS_ELDERLY = `
+function getPdfCaptureCssElderly(widthPx) {
+  return `
   html, body {
     margin: 0 !important;
     padding: 0 !important;
@@ -313,12 +316,12 @@ const PDF_CAPTURE_CSS_ELDERLY = `
 
   [data-pdf-capture-root] {
     display: block !important;
-    width: 794px !important;
+    width: ${widthPx}px !important;
     background: #ffffff !important;
   }
 
   .pde-receipt {
-    width: 794px;
+    width: ${widthPx}px;
     padding: 48px;
     background: #ffffff;
     color: #000000;
@@ -526,12 +529,13 @@ const PDF_CAPTURE_CSS_ELDERLY = `
     color: #555555;
   }
 `
+}
 
-function preparePdfClone(documentClone, captureId, template = 'standard') {
+function preparePdfClone(documentClone, captureId, template, widthPx) {
   documentClone.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => node.remove())
 
   const style = documentClone.createElement('style')
-  style.textContent = template === 'elderly' ? PDF_CAPTURE_CSS_ELDERLY : PDF_CAPTURE_CSS
+  style.textContent = template === 'elderly' ? getPdfCaptureCssElderly(widthPx) : getPdfCaptureCss(widthPx)
   documentClone.head.appendChild(style)
 
   documentClone.documentElement.style.background = '#ffffff'
@@ -549,10 +553,12 @@ export function usePdfGenerator() {
   const isGenerating = shallowRef(false)
   const isCopying = shallowRef(false)
 
-  async function generatePdf(element, receiptNumber, template = 'standard') {
+  async function generatePdf(element, receiptNumber, template = 'standard', paperConfig) {
     if (!element) {
       throw new Error('Receipt preview is not available.')
     }
+
+    const { widthMm, heightMm, widthPx } = paperConfig
 
     isGenerating.value = true
     const captureId = crypto.randomUUID()
@@ -564,10 +570,10 @@ export function usePdfGenerator() {
         scale: 2,
         useCORS: true,
         logging: false,
-        onclone: (documentClone) => preparePdfClone(documentClone, captureId, template),
+        onclone: (documentClone) => preparePdfClone(documentClone, captureId, template, widthPx),
       })
 
-      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdf = new jsPDF('p', 'mm', [widthMm, heightMm])
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
       const imageWidth = pageWidth
@@ -593,10 +599,12 @@ export function usePdfGenerator() {
     }
   }
 
-  async function copyAsImage(element, template = 'standard') {
+  async function copyAsImage(element, template = 'standard', paperConfig = {}) {
     if (!element) {
       throw new Error('Receipt preview is not available.')
     }
+
+    const { widthPx = 794 } = paperConfig
 
     isCopying.value = true
     const captureId = crypto.randomUUID()
@@ -608,7 +616,7 @@ export function usePdfGenerator() {
         scale: 2,
         useCORS: true,
         logging: false,
-        onclone: (documentClone) => preparePdfClone(documentClone, captureId, template),
+        onclone: (documentClone) => preparePdfClone(documentClone, captureId, template, widthPx),
       })
 
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
