@@ -1,0 +1,123 @@
+{
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "khmer": "Khmer"
+  },
+  "template": {
+    "label": "Template",
+    "standard": "Standard",
+    "elderly": "Elderly Friendly"
+  },
+  "app": {
+    "eyebrow": "Receipt PDF Creator",
+    "title": "Build and export a professional receipt",
+    "description": "Manage products, confirm delivery details, preview the receipt structure, and export a print-ready PDF.",
+    "continue": "Continue",
+    "preview": "Preview receipt",
+    "previewTitle": "Receipt preview",
+    "previewDescription": "Review the receipt before creating the PDF.",
+    "closePreview": "Close preview",
+    "draftSaved": "Draft saved",
+    "resetProducts": "Reset Products"
+  },
+  "summary": {
+    "products": "Products",
+    "units": "{count} units",
+    "subtotal": "Subtotal",
+    "beforeDelivery": "Before delivery",
+    "finalTotal": "Final total",
+    "calculatedTotal": "Calculated total",
+    "fixedOverride": "Fixed price override",
+    "receiptSummary": "Receipt summary",
+    "deliveryFee": "Delivery fee",
+    "discount": "Discount",
+    "previewData": "PDF preview data",
+    "receiptDate": "Receipt date",
+    "totalUnits": "Total units"
+  },
+  "products": {
+    "title": "Products",
+    "description": "Add every item that should appear on the receipt.",
+    "add": "Add Product",
+    "name": "Product Name",
+    "nameShort": "Product name",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "total": "Total",
+    "rowTotal": "Row total",
+    "actions": "Actions",
+    "remove": "Remove {name}",
+    "fallbackName": "product",
+    "empty": "No products yet. Add a product to begin."
+  },
+  "dialog": {
+    "title": "Delivery information",
+    "description": "Complete the receipt details before exporting the PDF.",
+    "close": "Close dialog",
+    "customerName": "Customer Name",
+    "optional": "Optional",
+    "phoneNumber": "Phone Number",
+    "deliveryAddress": "Delivery Address",
+    "addressPlaceholder": "Street, city, delivery notes",
+    "deliveryFee": "Delivery Fee",
+    "fixedTotal": "Fixed Total Price",
+    "deliveryService": "Delivery Service",
+    "deliveryServiceOther": "Other",
+    "deliveryServiceOtherPlaceholder": "Enter delivery service name",
+    "createPdf": "Create PDF"
+  },
+  "validation": {
+    "productRequired": "Product name is required.",
+    "quantityPositive": "Quantity must be greater than 0.",
+    "priceValid": "Price must be 0 or greater.",
+    "productListRequired": "At least one product is required.",
+    "phoneRequired": "Phone number is required.",
+    "addressRequired": "Delivery address is required.",
+    "deliveryFeeValid": "Delivery fee must be 0 or greater.",
+    "fixedTotalValid": "Fixed total must be 0 or greater."
+  },
+  "toast": {
+    "productAddedTitle": "Product added",
+    "productAddedDescription": "A new row is ready for entry.",
+    "productRemovedTitle": "Product removed",
+    "productRemovedDescription": "Receipt totals were updated.",
+    "addProductFirstTitle": "Add a product first",
+    "checkProductsTitle": "Check product details",
+    "checkProductsDescription": "Fix the highlighted rows before continuing.",
+    "incompleteTitle": "Please complete required fields",
+    "incompleteDescription": "Resolve the highlighted fields before generating the PDF.",
+    "exportedTitle": "Receipt exported successfully",
+    "exportedDescription": "The form was reset and a new receipt is ready.",
+    "failedTitle": "PDF generation failed",
+    "failedDescription": "Try again with fewer or shorter receipt items."
+  },
+  "pdf": {
+    "shopName": "ChiOuy",
+    "shopAddress": "ហាងកាហ្វេចោមចៅ, ខណ្ឌពោធ៍សែនជ័យ, ភ្នំពេញ",
+    "shopPhone": "017 685 141",
+    "title": "Receipt",
+    "number": "No.",
+    "customer": "Customer",
+    "walkIn": "Walk-in customer",
+    "delivery": "Delivery",
+    "deliveryFee": "Delivery fee",
+    "productName": "Product Name",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "finalTotal": "Final Total",
+    "deliveryService": "Delivery Service",
+    "services": {
+      "vireakbutham": "Vireak Buntham",
+      "jalat": "Jalat",
+      "d2d": "D2D"
+    },
+    "thanks": "Thank you for your purchase.",
+    "contact": "For questions about this receipt, contact 017 685 141.",
+    "notes": "Notes: Please keep this receipt for delivery confirmation and future reference.",
+    "qr": "QR Code"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "language": {
+    "label": "ភាសា",
+    "english": "English",
+    "khmer": "ខ្មែរ"
+  },
+  "template": {
+    "label": "គំរូ",
+    "standard": "ស្តង់ដារ",
+    "elderly": "ងាយអាន"
+  },
+  "app": {
+    "eyebrow": "កម្មវិធីបង្កើតវិក្កយបត្រ PDF",
+    "title": "បង្កើត និងនាំចេញវិក្កយបត្រដែលមានលក្ខណៈវិជ្ជាជីវៈ",
+    "description": "គ្រប់គ្រងផលិតផល បញ្ជាក់ព័ត៌មានដឹកជញ្ជូន ពិនិត្យទិន្នន័យវិក្កយបត្រ និងនាំចេញជា PDF សម្រាប់បោះពុម្ព។",
+    "continue": "បន្ត",
+    "draftSaved": "បានរក្សាទុកព្រាង",
+    "resetProducts": "កំណត់ផលិតផលឡើងវិញ",
+    "preview": "មើលវិក្កយបត្រ",
+    "previewTitle": "មើលវិក្កយបត្រ",
+    "previewDescription": "ពិនិត្យវិក្កយបត្រមុនពេលបង្កើត PDF។",
+    "closePreview": "បិទការមើល"
+  },
+  "summary": {
+    "products": "ផលិតផល",
+    "units": "{count} ឯកតា",
+    "subtotal": "សរុបរង",
+    "beforeDelivery": "មុនថ្លៃដឹកជញ្ជូន",
+    "finalTotal": "សរុបចុងក្រោយ",
+    "calculatedTotal": "គណនាស្វ័យប្រវត្តិ",
+    "fixedOverride": "ប្រើតម្លៃសរុបថេរ",
+    "receiptSummary": "សង្ខេបវិក្កយបត្រ",
+    "deliveryFee": "ថ្លៃដឹកជញ្ជូន",
+    "discount": "បញ្ចុះតម្លៃ",
+    "previewData": "ទិន្នន័យមើលមុន PDF",
+    "receiptDate": "កាលបរិច្ឆេទវិក្កយបត្រ",
+    "totalUnits": "ចំនួនឯកតាសរុប"
+  },
+  "products": {
+    "title": "ផលិតផល",
+    "description": "បន្ថែមរាល់ទំនិញដែលត្រូវបង្ហាញលើវិក្កយបត្រ។",
+    "add": "បន្ថែមផលិតផល",
+    "name": "ឈ្មោះផលិតផល",
+    "nameShort": "ឈ្មោះផលិតផល",
+    "quantity": "បរិមាណ",
+    "unitPrice": "តម្លៃក្នុងមួយឯកតា",
+    "total": "សរុប",
+    "rowTotal": "សរុបជួរ",
+    "actions": "សកម្មភាព",
+    "remove": "លុប {name}",
+    "fallbackName": "ផលិតផល",
+    "empty": "មិនទាន់មានផលិតផលទេ។ សូមបន្ថែមផលិតផលដើម្បីចាប់ផ្តើម។"
+  },
+  "dialog": {
+    "title": "ព័ត៌មានដឹកជញ្ជូន",
+    "description": "បំពេញព័ត៌មានវិក្កយបត្រមុនពេលនាំចេញជា PDF។",
+    "close": "បិទប្រអប់",
+    "customerName": "ឈ្មោះអតិថិជន",
+    "optional": "មិនចាំបាច់",
+    "phoneNumber": "លេខទូរស័ព្ទ",
+    "deliveryAddress": "អាសយដ្ឋានដឹកជញ្ជូន",
+    "addressPlaceholder": "ផ្លូវ ទីក្រុង និងកំណត់ចំណាំដឹកជញ្ជូន",
+    "deliveryFee": "ថ្លៃដឹកជញ្ជូន",
+    "fixedTotal": "តម្លៃសរុបថេរ",
+    "deliveryService": "សេវាដឹកជញ្ជូន",
+    "deliveryServiceOther": "ផ្សេងទៀត",
+    "deliveryServiceOtherPlaceholder": "បញ្ចូលឈ្មោះសេវាដឹកជញ្ជូន",
+    "createPdf": "បង្កើត PDF"
+  },
+  "validation": {
+    "productRequired": "ត្រូវបញ្ចូលឈ្មោះផលិតផល។",
+    "quantityPositive": "បរិមាណត្រូវធំជាង 0។",
+    "priceValid": "តម្លៃត្រូវតែស្មើ ឬធំជាង 0។",
+    "productListRequired": "ត្រូវមានផលិតផលយ៉ាងហោចណាស់មួយ។",
+    "phoneRequired": "ត្រូវបញ្ចូលលេខទូរស័ព្ទ។",
+    "addressRequired": "ត្រូវបញ្ចូលអាសយដ្ឋានដឹកជញ្ជូន។",
+    "deliveryFeeValid": "ថ្លៃដឹកជញ្ជូនត្រូវតែស្មើ ឬធំជាង 0។",
+    "fixedTotalValid": "តម្លៃសរុបថេរត្រូវតែស្មើ ឬធំជាង 0។"
+  },
+  "toast": {
+    "productAddedTitle": "បានបន្ថែមផលិតផល",
+    "productAddedDescription": "ជួរថ្មីរួចរាល់សម្រាប់បញ្ចូលទិន្នន័យ។",
+    "productRemovedTitle": "បានលុបផលិតផល",
+    "productRemovedDescription": "សរុបវិក្កយបត្រត្រូវបានធ្វើបច្ចុប្បន្នភាព។",
+    "addProductFirstTitle": "សូមបន្ថែមផលិតផលជាមុន",
+    "checkProductsTitle": "សូមពិនិត្យព័ត៌មានផលិតផល",
+    "checkProductsDescription": "សូមកែជួរដែលបានបន្លិចមុនពេលបន្ត។",
+    "incompleteTitle": "សូមបំពេញព័ត៌មានដែលត្រូវការ",
+    "incompleteDescription": "សូមកែវាលដែលបានបន្លិចមុនពេលបង្កើត PDF។",
+    "exportedTitle": "វិក្កយបត្រត្រូវបានទាញយកដោយជោគជ័យ",
+    "exportedDescription": "ទម្រង់ត្រូវបានកំណត់ឡើងវិញ ហើយវិក្កយបត្រថ្មីរួចរាល់។",
+    "failedTitle": "បង្កើត PDF មិនបានសម្រេច",
+    "failedDescription": "សូមព្យាយាមម្តងទៀតដោយប្រើឈ្មោះផលិតផលខ្លីជាង ឬចំនួនទំនិញតិចជាង។"
+  },
+  "pdf": {
+    "shopName": "ChiOuy",
+    "shopAddress": "ហាងកាហ្វេចោមចៅ, ខណ្ឌពោធ៍សែនជ័យ, ភ្នំពេញ",
+    "shopPhone": "017 685 141",
+    "title": "វិក្កយបត្រ",
+    "number": "លេខ",
+    "customer": "អតិថិជន",
+    "walkIn": "អតិថិជនទូទៅ",
+    "delivery": "ដឹកជញ្ជូន",
+    "deliveryFee": "ថ្លៃដឹកជញ្ជូន",
+    "productName": "ឈ្មោះផលិតផល",
+    "quantity": "បរិមាណ",
+    "unitPrice": "តម្លៃក្នុងមួយឯកតា",
+    "total": "សរុប",
+    "subtotal": "សរុបរង",
+    "discount": "បញ្ចុះតម្លៃ",
+    "finalTotal": "សរុបចុងក្រោយ",
+    "deliveryService": "សេវាដឹកជញ្ជូន",
+    "services": {
+      "vireakbutham": "វិរះប៊ុនថាំ",
+      "jalat": "ចល័ត",
+      "d2d": "D2D"
+    },
+    "thanks": "សូមអរគុណសម្រាប់ការជាវរបស់អ្នក។",
+    "contact": "បើមានសំណួរអំពីវិក្កយបត្រនេះ សូមទាក់ទង 017 685 141។",
+    "notes": "កំណត់ចំណាំ៖ សូមរក្សាទុកវិក្កយបត្រនេះសម្រាប់បញ្ជាក់ការដឹកជញ្ជូន និងយោងនៅពេលក្រោយ។",
+    "qr": "កូដ QR"
+  }
+}
